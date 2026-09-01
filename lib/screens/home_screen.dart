@@ -8,20 +8,20 @@ class HomeScreen extends StatefulWidget { const HomeScreen({super.key}); @overri
 
 class _HomeScreenState extends State<HomeScreen> {
   final RadioService radio=RadioService.instance;
-  late final WebViewController caster;
+  late final WebViewController player;
   bool loading=false;
   String status='Prêt à écouter la radio';
 
   @override void initState(){super.initState();
-    caster=WebViewController()
+    player=WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFFF7F7F7))
       ..loadFlutterAsset('assets/caster_player.html');
     radio.player.onPlayerStateChanged.listen((s){if(!mounted)return;setState(()=>status=s==PlayerState.playing?'🔴 RADIO CIWARA — EN DIRECT':s==PlayerState.paused?'Radio en pause':'Prêt à écouter la radio');});
   }
 
-  Future<void> toggle() async {if(loading)return;setState(()=>loading=true);try{if(radio.player.state==PlayerState.playing){await radio.pause();}else{await radio.play();}}catch(_){if(mounted){setState(()=>status='Flux indisponible — essayez le lecteur Caster.fm.');ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Le flux natif est indisponible. Le lecteur Caster.fm reste disponible.')));}}finally{if(mounted)setState(()=>loading=false);}}
-  Future<void> openUrl(String url) async {await caster.loadRequest(Uri.parse(url));}
+  Future<void> toggle() async {if(loading)return;setState(()=>loading=true);try{if(radio.player.state==PlayerState.playing){await radio.pause();}else{await radio.play();}}catch(_){if(mounted){setState(()=>status='Flux natif indisponible — utilisez le lecteur principal ci-dessous.');ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Utilisez le lecteur Radio Ciwara intégré pour écouter le direct.')));}}finally{if(mounted)setState(()=>loading=false);}}
+  Future<void> openUrl(String url) async {await player.loadRequest(Uri.parse(url));}
   @override void dispose(){radio.dispose();super.dispose();}
 
   @override Widget build(BuildContext context){
@@ -37,8 +37,8 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(width:double.infinity,height:56,child:FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:red),onPressed:toggle,icon:loading?const SizedBox(width:20,height:20,child:CircularProgressIndicator(strokeWidth:2,color:Colors.white)):StreamBuilder<PlayerState>(stream:radio.player.onPlayerStateChanged,builder:(c,s)=>Icon(s.data==PlayerState.playing?Icons.stop_rounded:Icons.play_arrow_rounded)),label:StreamBuilder<PlayerState>(stream:radio.player.onPlayerStateChanged,builder:(c,s)=>Text(s.data==PlayerState.playing?'ARRÊTER':'ÉCOUTER EN DIRECT')))),
         ])),
         const SizedBox(height:18),
-        const Text('LECTEUR CASTER.FM',style:TextStyle(fontSize:12,fontWeight:FontWeight.w900,color:red)),const SizedBox(height:8),
-        Container(height:205,clipBehavior:Clip.antiAlias,decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:WebViewWidget(controller:caster)),
+        const Text('LECTEUR RADIO CIWARA',style:TextStyle(fontSize:12,fontWeight:FontWeight.w900,color:red)),const SizedBox(height:8),
+        Container(height:205,clipBehavior:Clip.antiAlias,decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16)),child:WebViewWidget(controller:player)),
         const SizedBox(height:22),
         _card(Icons.article_outlined,'CIWARA INFO','Le journal écrit de Radio Ciwara',()=>openUrl('${RadioConfig.websiteUrl}ciwara-info.html')),
         _card(Icons.live_tv_outlined,'CIWARA TV','Regardez la WebTV de Ciwara',()=>openUrl('${RadioConfig.websiteUrl}ciwara-tv.html')),
